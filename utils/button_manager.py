@@ -8,13 +8,21 @@ logger = logging.getLogger(__name__)
 class ButtonManager:
     def __init__(self):
         self.force_sub_channel = config.FORCE_SUB_CHANNEL
+        self.force_sub_channel_2 = config.FORCE_SUB_CHANNEL_2
         self.db_channel = config.DB_CHANNEL_ID
 
     async def check_force_sub(self, client, user_id: int) -> bool:
         try:
-            member = await client.get_chat_member(self.force_sub_channel, user_id)
-            if member.status in ["left", "kicked"]:
-                return False
+            if self.force_sub_channel != 0:
+                member = await client.get_chat_member(self.force_sub_channel, user_id)
+                if member.status in ["left", "kicked"]:
+                    return False
+            
+            if self.force_sub_channel_2 != 0:
+                member = await client.get_chat_member(self.force_sub_channel_2, user_id)
+                if member.status in ["left", "kicked"]:
+                    return False
+                    
             return True
         except Exception as e:
             logger.error(f"Force sub check error: {str(e)}")
@@ -54,12 +62,24 @@ class ButtonManager:
             logger.error(f"Show about error: {str(e)}")
 
     def force_sub_button(self) -> InlineKeyboardMarkup:
-        buttons = [[
-            InlineKeyboardButton(
-                "Join Channel 🔔",
-                url=config.CHANNEL_LINK
-            )
-        ]]
+        buttons = []
+        
+        if config.FORCE_SUB_CHANNEL != 0 and config.CHANNEL_LINK:
+            buttons.append([
+                InlineKeyboardButton(
+                    "Join Channel 1 🔔",
+                    url=config.CHANNEL_LINK
+                )
+            ])
+            
+        if config.FORCE_SUB_CHANNEL_2 != 0 and config.CHANNEL_LINK_2:
+            buttons.append([
+                InlineKeyboardButton(
+                    "Join Channel 2 🔔",
+                    url=config.CHANNEL_LINK_2
+                )
+            ])
+            
         return InlineKeyboardMarkup(buttons)
 
     def start_button(self) -> InlineKeyboardMarkup:
@@ -67,12 +87,24 @@ class ButtonManager:
             [
                 InlineKeyboardButton("Help 📜", callback_data="help"),
                 InlineKeyboardButton("About ℹ️", callback_data="about")
-            ],
-            [
-                InlineKeyboardButton("Channel 📢", url=config.CHANNEL_LINK),
-                InlineKeyboardButton("Developer 👨‍💻", url=config.DEVELOPER_LINK)
             ]
         ]
+        
+        if config.CHANNEL_LINK:
+            if config.CHANNEL_LINK_2:
+                buttons.append([
+                    InlineKeyboardButton("Channel 1 📢", url=config.CHANNEL_LINK),
+                    InlineKeyboardButton("Channel 2 📢", url=config.CHANNEL_LINK_2)
+                ])
+            else:
+                buttons.append([
+                    InlineKeyboardButton("Channel 📢", url=config.CHANNEL_LINK)
+                ])
+                
+        buttons.append([
+            InlineKeyboardButton("Developer 👨‍💻", url=config.DEVELOPER_LINK)
+        ])
+        
         return InlineKeyboardMarkup(buttons)
 
     def help_button(self) -> InlineKeyboardMarkup:
@@ -80,11 +112,20 @@ class ButtonManager:
             [
                 InlineKeyboardButton("Home 🏠", callback_data="home"),
                 InlineKeyboardButton("About ℹ️", callback_data="about")
-            ],
-            [
-                InlineKeyboardButton("Channel 📢", url=config.CHANNEL_LINK)
             ]
         ]
+        
+        if config.CHANNEL_LINK:
+            if config.CHANNEL_LINK_2:
+                buttons.append([
+                    InlineKeyboardButton("Channel 1 📢", url=config.CHANNEL_LINK),
+                    InlineKeyboardButton("Channel 2 📢", url=config.CHANNEL_LINK_2)
+                ])
+            else:
+                buttons.append([
+                    InlineKeyboardButton("Channel 📢", url=config.CHANNEL_LINK)
+                ])
+        
         return InlineKeyboardMarkup(buttons)
 
     def about_button(self) -> InlineKeyboardMarkup:
@@ -92,11 +133,20 @@ class ButtonManager:
             [
                 InlineKeyboardButton("Home 🏠", callback_data="home"),
                 InlineKeyboardButton("Help 📜", callback_data="help")
-            ],
-            [
-                InlineKeyboardButton("Channel 📢", url=config.CHANNEL_LINK)
             ]
         ]
+        
+        if config.CHANNEL_LINK:
+            if config.CHANNEL_LINK_2:
+                buttons.append([
+                    InlineKeyboardButton("Channel 1 📢", url=config.CHANNEL_LINK),
+                    InlineKeyboardButton("Channel 2 📢", url=config.CHANNEL_LINK_2)
+                ])
+            else:
+                buttons.append([
+                    InlineKeyboardButton("Channel 📢", url=config.CHANNEL_LINK)
+                ])
+        
         return InlineKeyboardMarkup(buttons)
 
     def file_button(self, file_uuid: str) -> InlineKeyboardMarkup:
@@ -104,11 +154,20 @@ class ButtonManager:
             [
                 InlineKeyboardButton("Download 📥", callback_data=f"download_{file_uuid}"),
                 InlineKeyboardButton("Share Link 🔗", callback_data=f"share_{file_uuid}")
-            ],
-            [
-                InlineKeyboardButton("Channel 📢", url=config.CHANNEL_LINK)
             ]
         ]
+        
+        if config.CHANNEL_LINK:
+            if config.CHANNEL_LINK_2:
+                buttons.append([
+                    InlineKeyboardButton("Channel 1 📢", url=config.CHANNEL_LINK),
+                    InlineKeyboardButton("Channel 2 📢", url=config.CHANNEL_LINK_2)
+                ])
+            else:
+                buttons.append([
+                    InlineKeyboardButton("Channel 📢", url=config.CHANNEL_LINK)
+                ])
+        
         return InlineKeyboardMarkup(buttons)
 
     def batch_button(self, batch_uuid: str) -> InlineKeyboardMarkup:
@@ -116,9 +175,18 @@ class ButtonManager:
             [
                 InlineKeyboardButton("Download All 📥", callback_data=f"dlbatch_{batch_uuid}"),
                 InlineKeyboardButton("Share Link 🔗", callback_data=f"share_batch_{batch_uuid}")
-            ],
-            [
-                InlineKeyboardButton("Channel 📢", url=config.CHANNEL_LINK)
             ]
         ]
+        
+        if config.CHANNEL_LINK:
+            if config.CHANNEL_LINK_2:
+                buttons.append([
+                    InlineKeyboardButton("Channel 1 📢", url=config.CHANNEL_LINK),
+                    InlineKeyboardButton("Channel 2 📢", url=config.CHANNEL_LINK_2)
+                ])
+            else:
+                buttons.append([
+                    InlineKeyboardButton("Channel 📢", url=config.CHANNEL_LINK)
+                ])
+        
         return InlineKeyboardMarkup(buttons)
