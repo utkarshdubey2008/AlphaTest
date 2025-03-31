@@ -14,9 +14,14 @@ API_HASH = os.getenv("API_HASH")
 MONGO_URI = os.getenv("MONGO_URI")
 DATABASE_NAME = os.getenv("DATABASE_NAME")
 
-# Channel Configuration
+# Channel Configuration 
 DB_CHANNEL_ID = int(os.getenv("DB_CHANNEL_ID"))
-FORCE_SUB_CHANNEL = int(os.getenv("FORCE_SUB_CHANNEL"))
+FORCE_SUB_CHANNEL = int(os.getenv("FORCE_SUB_CHANNEL")) # First force sub channel
+FORCE_SUB_CHANNEL_2 = int(os.getenv("FORCE_SUB_CHANNEL_2", 0)) # Second force sub channel, defaults to 0 if not set
+
+# Add a second channel link
+CHANNEL_LINK = os.getenv("CHANNEL_LINK") # First channel link
+CHANNEL_LINK_2 = os.getenv("CHANNEL_LINK_2", "") # Second channel link
 
 # Bot Information
 BOT_USERNAME = os.getenv("BOT_USERNAME")
