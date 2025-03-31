@@ -23,11 +23,11 @@ async def start_command(client: Client, message: Message):
             force_sub_text = "**⚠️ You must join our channel(s) to use this bot!**\n\n"
             
             if config.FORCE_SUB_CHANNEL != 0:
-                force_sub_text += "• Please join Channel 1\n"
+                force_sub_text += "• Join Channel 1\n"
             if config.FORCE_SUB_CHANNEL_2 != 0:
-                force_sub_text += "• Please join Channel 2\n"
+                force_sub_text += "• Join Channel 2\n"
                 
-            force_sub_text += "\nPlease join and try again."
+            force_sub_text += "\nJoin the channel(s) and try again."
             
             await message.reply_text(
                 force_sub_text,
@@ -154,4 +154,4 @@ async def start_command(client: Client, message: Message):
             ),
             reply_markup=button_manager.start_button(),
             protect_content=config.PRIVACY_MODE
-            )
+                                                   )
