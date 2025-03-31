@@ -18,10 +18,19 @@ async def start_command(client: Client, message: Message):
     if len(message.command) > 1:
         command = message.command[1]
         
-        if not await button_manager.check_force_sub(client, message.from_user.id):
+        force_sub_status = await button_manager.check_force_sub(client, message.from_user.id)
+        if not force_sub_status:
+            force_sub_text = "**⚠️ You must join our channel(s) to use this bot!**\n\n"
+            
+            if config.FORCE_SUB_CHANNEL != 0:
+                force_sub_text += "• Please join Channel 1\n"
+            if config.FORCE_SUB_CHANNEL_2 != 0:
+                force_sub_text += "• Please join Channel 2\n"
+                
+            force_sub_text += "\nPlease join and try again."
+            
             await message.reply_text(
-                "**⚠️ You must join our channel to use this bot!**\n\n"
-                "Please join Our Forcesub Channel and try again.",
+                force_sub_text,
                 reply_markup=button_manager.force_sub_button(),
                 protect_content=config.PRIVACY_MODE
             )
@@ -145,4 +154,4 @@ async def start_command(client: Client, message: Message):
             ),
             reply_markup=button_manager.start_button(),
             protect_content=config.PRIVACY_MODE
-                    )
+            )
