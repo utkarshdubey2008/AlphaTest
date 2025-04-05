@@ -1,3 +1,5 @@
+# Copyright (c)  @thealphabotz - All Rights Reserved.
+
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from database import Database
@@ -5,11 +7,31 @@ from utils import ButtonManager
 import config
 import asyncio
 import logging
+import base64
 from ..utils.message_delete import schedule_message_deletion
 
 logger = logging.getLogger(__name__)
 db = Database()
 button_manager = ButtonManager()
+
+async def decode_codex_link(encoded_string: str) -> tuple:
+    try:
+        string_bytes = base64.b64decode(encoded_string.encode("ascii"))
+        decoded = string_bytes.decode("ascii")
+        
+        if decoded.startswith("get-"):
+            parts = decoded.split("-")
+            if len(parts) == 2:
+                msg_id = int(parts[1]) // abs(config.DB_CHANNEL_ID)
+                return False, [msg_id]
+            elif len(parts) == 3:
+                first_id = int(parts[1]) // abs(config.DB_CHANNEL_ID)
+                last_id = int(parts[2]) // abs(config.DB_CHANNEL_ID)
+                return True, list(range(first_id, last_id + 1))
+        return False, []
+    except Exception as e:
+        logger.error(f"Error decoding CodeXBotz link: {str(e)}")
+        return False, []
 
 @Client.on_message(filters.command("start"))
 async def start_command(client: Client, message: Message):
@@ -35,6 +57,59 @@ async def start_command(client: Client, message: Message):
                 protect_content=config.PRIVACY_MODE
             )
             return
+
+        is_codex_batch, message_ids = await decode_codex_link(command)
+        
+        if message_ids:
+            if is_codex_batch:
+                status_msg = await message.reply_text(
+                    f"🔄 **Processing Batch Download**\n\n"
+                    f"📦 Total Files: {len(message_ids)}\n"
+                    f"⏳ Please wait...",
+                    protect_content=config.PRIVACY_MODE
+                )
+                
+                success_count = 0
+                failed_count = 0
+                
+                for msg_id in message_ids:
+                    try:
+                        msg = await client.copy_message(
+                            chat_id=message.chat.id,
+                            from_chat_id=config.DB_CHANNEL_ID,
+                            message_id=msg_id,
+                            protect_content=config.PRIVACY_MODE
+                        )
+                        if msg:
+                            success_count += 1
+                    except Exception as e:
+                        failed_count += 1
+                        logger.error(f"CodeXBotz batch file send error: {str(e)}")
+                        continue
+                
+                status_text = (
+                    f"✅ **Batch Download Complete**\n\n"
+                    f"📥 Successfully sent: {success_count} files\n"
+                    f"❌ Failed: {failed_count} files"
+                )
+                await status_msg.edit_text(status_text)
+                return
+            
+            else:
+                try:
+                    msg = await client.copy_message(
+                        chat_id=message.chat.id,
+                        from_chat_id=config.DB_CHANNEL_ID,
+                        message_id=message_ids[0],
+                        protect_content=config.PRIVACY_MODE
+                    )
+                    return
+                except Exception as e:
+                    await message.reply_text(
+                        "❌ File not found or has been deleted!", 
+                        protect_content=config.PRIVACY_MODE
+                    )
+                    return
 
         if command.startswith("batch_"):
             batch_uuid = command.replace("batch_", "")
@@ -154,4 +229,6 @@ async def start_command(client: Client, message: Message):
             ),
             reply_markup=button_manager.start_button(),
             protect_content=config.PRIVACY_MODE
-                                                   )
+        )
+
+# @thealphabotz | Join @thealphabotz on Telegram
