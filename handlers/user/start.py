@@ -89,12 +89,15 @@ async def start_command(client: Client, message: Message):
                             sent_msgs.append(msg.id)
                             success_count += 1
                             
-                            if config.AUTO_DELETE_TIME:
-                                delete_time = config.AUTO_DELETE_TIME
+                            file_data = await db.get_file(str(msg_id))
+                            if file_data and file_data.get("auto_delete"):
+                                delete_time = file_data.get("auto_delete_time", getattr(config, 'DEFAULT_AUTO_DELETE', 30))
                                 info_msg = await msg.reply_text(
-                                    f"⏳ **Auto Delete Information**\n\n"
-                                    f"➜ This file will be deleted in {delete_time} minutes.\n"
-                                    f"➜ Forward this file to your saved messages or another chat to save it permanently.",
+                                    f"⏳ **File Auto-Delete Information**\n\n"
+                                    f"This file will be automatically deleted in {delete_time} minutes\n"
+                                    f"• Delete Time: {delete_time} minutes\n"
+                                    f"• Time Left: {delete_time} minutes\n"
+                                    f"💡 **Save this file to your saved messages before it's deleted!**",
                                     protect_content=config.PRIVACY_MODE
                                 )
                                 if info_msg and info_msg.id:
@@ -124,12 +127,15 @@ async def start_command(client: Client, message: Message):
                         protect_content=config.PRIVACY_MODE
                     )
                     if msg:
-                        if config.AUTO_DELETE_TIME:
-                            delete_time = config.AUTO_DELETE_TIME
+                        file_data = await db.get_file(str(message_ids[0]))
+                        if file_data and file_data.get("auto_delete"):
+                            delete_time = file_data.get("auto_delete_time", getattr(config, 'DEFAULT_AUTO_DELETE', 30))
                             info_msg = await msg.reply_text(
-                                f"⏳ **Auto Delete Information**\n\n"
-                                f"➜ This file will be deleted in {delete_time} minutes.\n"
-                                f"➜ Forward this file to your saved messages or another chat to save it permanently.",
+                                f"⏳ **File Auto-Delete Information**\n\n"
+                                f"This file will be automatically deleted in {delete_time} minutes\n"
+                                f"• Delete Time: {delete_time} minutes\n"
+                                f"• Time Left: {delete_time} minutes\n"
+                                f"💡 **Save this file to your saved messages before it's deleted!**",
                                 protect_content=config.PRIVACY_MODE
                             )
                             if info_msg and info_msg.id:
@@ -144,6 +150,7 @@ async def start_command(client: Client, message: Message):
                     )
                     return
 
+        # Rest of your code remains the same for batch_ and single file handling
         if command.startswith("batch_"):
             batch_uuid = command.replace("batch_", "")
             batch_data = await db.get_batch(batch_uuid)
@@ -180,12 +187,14 @@ async def start_command(client: Client, message: Message):
                             sent_msgs.append(msg.id)
                             success_count += 1
                             
-                            if config.AUTO_DELETE_TIME:
-                                delete_time = config.AUTO_DELETE_TIME
+                            if file_data.get("auto_delete"):
+                                delete_time = file_data.get("auto_delete_time", getattr(config, 'DEFAULT_AUTO_DELETE', 30))
                                 info_msg = await msg.reply_text(
-                                    f"⏳ **Auto Delete Information**\n\n"
-                                    f"➜ This file will be deleted in {delete_time} minutes.\n"
-                                    f"➜ Forward this file to your saved messages or another chat to save it permanently.",
+                                    f"⏳ **File Auto-Delete Information**\n\n"
+                                    f"This file will be automatically deleted in {delete_time} minutes\n"
+                                    f"• Delete Time: {delete_time} minutes\n"
+                                    f"• Time Left: {delete_time} minutes\n"
+                                    f"💡 **Save this file to your saved messages before it's deleted!**",
                                     protect_content=config.PRIVACY_MODE
                                 )
                                 if info_msg and info_msg.id:
@@ -230,12 +239,14 @@ async def start_command(client: Client, message: Message):
                 if msg and msg.id:
                     await db.increment_downloads(file_uuid)
                     
-                    if config.AUTO_DELETE_TIME:
-                        delete_time = config.AUTO_DELETE_TIME
+                    if file_data.get("auto_delete"):
+                        delete_time = file_data.get("auto_delete_time", getattr(config, 'DEFAULT_AUTO_DELETE', 30))
                         info_msg = await msg.reply_text(
-                            f"⏳ **Auto Delete Information**\n\n"
-                            f"➜ This file will be deleted in {delete_time} minutes.\n"
-                            f"➜ Forward this file to your saved messages or another chat to save it permanently.",
+                            f"⏳ **File Auto-Delete Information**\n\n"
+                            f"This file will be automatically deleted in {delete_time} minutes\n"
+                            f"• Delete Time: {delete_time} minutes\n"
+                            f"• Time Left: {delete_time} minutes\n"
+                            f"💡 **Save this file to your saved messages before it's deleted!**",
                             protect_content=config.PRIVACY_MODE
                         )
                         if info_msg and info_msg.id:
