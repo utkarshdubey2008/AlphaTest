@@ -1,7 +1,7 @@
-# Copyright (c)  @thealphabotz - All Rights Reserved.
+# Copyright (c) 2021-2025 @thealphabotz - All Rights Reserved.
 
 from pyrogram import Client, filters
-from pyrogram.types import Message
+from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from database import Database
 from utils import ButtonManager
 import config
@@ -18,7 +18,6 @@ async def decode_codex_link(encoded_string: str) -> tuple:
     try:
         string_bytes = base64.b64decode(encoded_string.encode("ascii"))
         decoded = string_bytes.decode("ascii")
-        
         if decoded.startswith("get-"):
             parts = decoded.split("-")
             if len(parts) == 2:
@@ -35,7 +34,12 @@ async def decode_codex_link(encoded_string: str) -> tuple:
 
 @Client.on_message(filters.command("start"))
 async def start_command(client: Client, message: Message):
-    await db.add_user(message.from_user.id, message.from_user.username)
+    try:
+        await db.add_user(message.from_user.id, message.from_user.mention)
+    except Exception as e:
+        logger.error(f"Error adding user to database: {str(e)}")
+
+    user_method = message.from_user.mention if message.from_user.mention else message.from_user.first_name
     
     if len(message.command) > 1:
         command = message.command[1]
@@ -71,6 +75,7 @@ async def start_command(client: Client, message: Message):
                 
                 success_count = 0
                 failed_count = 0
+                sent_msgs = []
                 
                 for msg_id in message_ids:
                     try:
@@ -81,10 +86,25 @@ async def start_command(client: Client, message: Message):
                             protect_content=config.PRIVACY_MODE
                         )
                         if msg:
+                            sent_msgs.append(msg.id)
                             success_count += 1
+                            
+                            if config.AUTO_DELETE_TIME:
+                                delete_time = config.AUTO_DELETE_TIME
+                                info_msg = await msg.reply_text(
+                                    f"⏳ **Auto Delete Information**\n\n"
+                                    f"➜ This file will be deleted in {delete_time} minutes.\n"
+                                    f"➜ Forward this file to your saved messages or another chat to save it permanently.",
+                                    protect_content=config.PRIVACY_MODE
+                                )
+                                if info_msg and info_msg.id:
+                                    sent_msgs.append(info_msg.id)
+                                    asyncio.create_task(schedule_message_deletion(
+                                        client, str(msg_id), message.chat.id, [msg.id, info_msg.id], delete_time
+                                    ))
                     except Exception as e:
                         failed_count += 1
-                        logger.error(f"CodeXBotz batch file send error: {str(e)}")
+                        logger.error(f"Batch file send error: {str(e)}")
                         continue
                 
                 status_text = (
@@ -103,6 +123,19 @@ async def start_command(client: Client, message: Message):
                         message_id=message_ids[0],
                         protect_content=config.PRIVACY_MODE
                     )
+                    if msg:
+                        if config.AUTO_DELETE_TIME:
+                            delete_time = config.AUTO_DELETE_TIME
+                            info_msg = await msg.reply_text(
+                                f"⏳ **Auto Delete Information**\n\n"
+                                f"➜ This file will be deleted in {delete_time} minutes.\n"
+                                f"➜ Forward this file to your saved messages or another chat to save it permanently.",
+                                protect_content=config.PRIVACY_MODE
+                            )
+                            if info_msg and info_msg.id:
+                                asyncio.create_task(schedule_message_deletion(
+                                    client, str(message_ids[0]), message.chat.id, [msg.id, info_msg.id], delete_time
+                                ))
                     return
                 except Exception as e:
                     await message.reply_text(
@@ -147,14 +180,12 @@ async def start_command(client: Client, message: Message):
                             sent_msgs.append(msg.id)
                             success_count += 1
                             
-                            if file_data.get("auto_delete"):
-                                delete_time = file_data.get("auto_delete_time", getattr(config, 'DEFAULT_AUTO_DELETE', 30))
+                            if config.AUTO_DELETE_TIME:
+                                delete_time = config.AUTO_DELETE_TIME
                                 info_msg = await msg.reply_text(
-                                    f"⏳ **File Auto-Delete Information**\n\n"
-                                    f"This file will be automatically deleted in {delete_time} minutes\n"
-                                    f"• Delete Time: {delete_time} minutes\n"
-                                    f"• Time Left: {delete_time} minutes\n"
-                                    f"💡 **Save this file to your saved messages before it's deleted!**",
+                                    f"⏳ **Auto Delete Information**\n\n"
+                                    f"➜ This file will be deleted in {delete_time} minutes.\n"
+                                    f"➜ Forward this file to your saved messages or another chat to save it permanently.",
                                     protect_content=config.PRIVACY_MODE
                                 )
                                 if info_msg and info_msg.id:
@@ -199,17 +230,14 @@ async def start_command(client: Client, message: Message):
                 if msg and msg.id:
                     await db.increment_downloads(file_uuid)
                     
-                    if file_data.get("auto_delete"):
-                        delete_time = file_data.get("auto_delete_time", getattr(config, 'DEFAULT_AUTO_DELETE', 30))
+                    if config.AUTO_DELETE_TIME:
+                        delete_time = config.AUTO_DELETE_TIME
                         info_msg = await msg.reply_text(
-                            f"⏳ **File Auto-Delete Information**\n\n"
-                            f"This file will be automatically deleted in {delete_time} minutes\n"
-                            f"• Delete Time: {delete_time} minutes\n"
-                            f"• Time Left: {delete_time} minutes\n"
-                            f"💡 **Save this file to your saved messages before it's deleted!**",
+                            f"⏳ **Auto Delete Information**\n\n"
+                            f"➜ This file will be deleted in {delete_time} minutes.\n"
+                            f"➜ Forward this file to your saved messages or another chat to save it permanently.",
                             protect_content=config.PRIVACY_MODE
                         )
-                        
                         if info_msg and info_msg.id:
                             asyncio.create_task(schedule_message_deletion(
                                 client, file_uuid, message.chat.id, [msg.id, info_msg.id], delete_time
@@ -222,12 +250,12 @@ async def start_command(client: Client, message: Message):
                 )
                 
     else:
+        buttons = button_manager.start_button()
         await message.reply_text(
             config.Messages.START_TEXT.format(
-                bot_name=config.BOT_NAME,
-                user_mention=message.from_user.mention
+                user_mention=user_method
             ),
-            reply_markup=button_manager.start_button(),
+            reply_markup=buttons,
             protect_content=config.PRIVACY_MODE
         )
 
