@@ -31,10 +31,12 @@ BOT_VERSION = "1.4"
 PRIVACY_MODE = os.getenv("PRIVACY_MODE", "off").lower() == "on"
 
 # Your Modiji Url Api Key Here
-MODIJI_API_KEY = os.getenv("MODIJI_API_KEY")
-if not MODIJI_API_KEY:
-    print("⚠️ Warning: MODIJI_API_KEY not set in environment variables")
-
+# Token System Configuration
+TOKEN_SYSTEM = True  # Enable or disable token system
+TOKEN_TIME = 12  # Number of hours a user remains verified
+SHORTENER_URL = "modijiurl.com"  # Choose from: modijiurl.com, shrinkearn.com, indianshortner.com
+SHORTENER_API_TOKEN = "your_shortener_api_token"  # API token for the URL shortener
+HOW_TO_VERIFY_LINK = "https://t.me/c/2437015777/6"  # Guide on how to verify
 # Links
 CHANNEL_LINK = os.getenv("CHANNEL_LINK")
 DEVELOPER_LINK = os.getenv("DEVELOPER_LINK")
