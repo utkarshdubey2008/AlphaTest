@@ -3,22 +3,26 @@ import requests
 import time
 from rich.console import Console
 from rich.panel import Panel
-import config  # Added import for config
+import config
 
 console = Console()
 
-# Check if MODIJI_API_KEY exists in config
-if not hasattr(config, 'MODIJI_API_KEY'):
-    raise Exception("Please add MODIJI_API_KEY to your config.py")
+# Check if SHORTENER_API_TOKEN exists in config
+if not hasattr(config, 'SHORTENER_API_TOKEN'):
+    raise Exception("Please add SHORTENER_API_TOKEN to your config.py")
 
-# API endpoint
-MODIJI_API_URL = "https://api.modijiurl.com/api"
+# Supported shorteners and their API URLs
+SHORTENER_API_URLS = {
+    "modijiurl.com": "https://api.modijiurl.com/api",
+    "shrinkearn.com": "https://shrinkearn.com/api",
+    "indianshortner.com": "https://indianshortner.com/api"
+}
 
-@Client.on_message(filters.command("short") & filters.user(config.ADMIN_IDS))  
+@Client.on_message(filters.command("short") & filters.user(config.ADMIN_IDS))
 async def short_url_command(client, message):
     """
     Command: /short {url}
-    Description: Shortens a URL using ModijiURL API
+    Description: Shortens a URL using the selected shortener API
     """
     try:
         # Extract URL from command
@@ -33,32 +37,40 @@ async def short_url_command(client, message):
             return
 
         url = command[1]
-        
-        
+
         status_msg = await message.reply_text(
             "🔄 **Processing your URL...**",
             quote=True
         )
 
+        # Check the selected shortener
+        shortener_url = config.SHORTENER_URL
+        if shortener_url not in SHORTENER_API_URLS:
+            await status_msg.edit_text(
+                "❌ **Invalid shortener URL in config!**\n\n"
+                "Please choose from: modijiurl.com, shrinkearn.com, indianshortner.com"
+            )
+            return
+
+        api_url = SHORTENER_API_URLS[shortener_url]
+
         # API request parameters
         params = {
-            'api': config.MODIJI_API_KEY,  
+            'api': config.SHORTENER_API_TOKEN,
             'url': url,
             'format': 'json'
         }
-        
-        
+
         time.sleep(2)
-        
-        
-        response = requests.get(MODIJI_API_URL, params=params)
+
+        response = requests.get(api_url, params=params)
         response.raise_for_status()
-        
+
         data = response.json()
-        
+
         if data.get('status') == 'success':
             shortened_url = data.get('shortenedUrl')
-            
+
             await status_msg.edit_text(
                 f"✅ **URL Shortened Successfully!**\n\n"
                 f"**Original URL:**\n`{url}`\n\n"
@@ -70,7 +82,7 @@ async def short_url_command(client, message):
                 "❌ **Failed to shorten URL!**\n\n"
                 "Please check your URL and try again."
             )
-            
+
     except IndexError:
         await message.reply_text(
             "❌ **Please provide a URL to shorten!**\n\n"
