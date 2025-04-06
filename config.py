@@ -34,8 +34,8 @@ PRIVACY_MODE = os.getenv("PRIVACY_MODE", "off").lower() == "on"
 # Token System Configuration
 TOKEN_SYSTEM = True  # Enable or disable token system
 TOKEN_TIME = 12  # Number of hours a user remains verified
-SHORTENER_URL = "modijiurl.com"  # Choose from: modijiurl.com, shrinkearn.com, indianshortner.com
-SHORTENER_API_TOKEN = "6adfd9b9944fb344038fb437f1b6156fe5f9958e"  # API token for the URL shortener
+SHORTENER_URL = "indianshortner.com"  # Choose from: modijiurl.com, shrinkearn.com, indianshortner.com
+SHORTENER_API_TOKEN = "38a15a4b01bd6773b8cda4ca456273a9c660c942"  # API token for the URL shortener
 HOW_TO_VERIFY_LINK = "https://t.me/c/2437015777/6"  # Guide on how to verify
 # Links
 CHANNEL_LINK = os.getenv("CHANNEL_LINK")
